@@ -71,9 +71,9 @@ fi
 # copy image file to server, as a backup ;)
 REMOTE_FILE=`basename $FILE`
 echo "Copying file to remote server ..."
-#scp $FILE $SCP_TARGET
+scp $FILE $SCP_TARGET
 echo "File [$REMOTE_FILE] has been copied to $SCP_TARGET ..."
-#ssh fritz@eck-zimmer.at "sh -c 'nohup /home/fritz/bin/tempcrypt $REMOTE_FILE $SECONDS $TOKEN >/tmp/tempcrypt.log &2>&1 &'"
+ssh fritz@eck-zimmer.at "sh -c 'nohup /home/fritz/bin/tempcrypt $REMOTE_FILE $SECONDS $TOKEN >/tmp/tempcrypt.log &2>&1 &'"
 
 echo "Remote encryption initiated."
 
