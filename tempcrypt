@@ -14,7 +14,7 @@
 #     then the program runs in "silent mode", no countdown shown.
 
 FILE=$1
-SECONDS=$2
+SECS=$2
 
 if [ "$3" ] ; then
 	LOCKFILE=$3
@@ -32,29 +32,6 @@ EOT
 }
 
 
-# log to stdout or to log lockfile, depending on whether a lockfile 
-# should be written or not
-function log {
-	if [ "$LOCKFILE" ] ; then
-		echo $TEXT >>$LOCKFILE
-	else
-		echo $TEXT
-	fi
-}
-
-
-# log to stdout, but only if no lockfile should be written ,
-# otherwise do nothing
-function stdout {
-	if [ "$LOCKFILE" ] ; then
-		:
-	else
-		echo $TEXT
-	fi
-}
-
-
-
 if [ "$FILE" == "" ] ; then
 	echo "Missing parameter #1: file to be encrypted"
 	printUsage
@@ -66,26 +43,29 @@ if [ ! -e $FILE ] ; then
 fi
 
 
-if [ "$SECONDS" == "" ] ; then
-	echo "Missing parameter SECONDS"
+if [ "$SECS" == "" ] ; then
+	echo "Missing parameter SECS"
 	printUsage
 	exit 1
 fi
 
-if [ ! "$SECONDS" -ge "5" ] ; then
-	echo "Parameter SECONDS is $SECONDS, but must be 5 or greater"
+if [ ! "$SECS" -ge "5" ] ; then
+	echo "Parameter SECS is $SECS, but must be 5 or greater"
 	exit 1
 fi
+
+echo "Script launched."
 
 # a random password
 PWD=`tr -dc "[:alnum:]" </dev/urandom | head -c 40`
 
 ccrypt --encrypt -K $PWD $FILE
 if [ "$LOCKFILE" ] ; then touch $LOCKFILE ; fi
-log "File $FILE has been encrypted."
-stdout "Starting countdown of $SECONDS seconds ..."
+echo "File $FILE has been encrypted."
+CURRENT_TIME=`date +'%Y-%m-%d %H:%M:%S'`
+echo "Starting countdown of $SECS seconds (it is now $CURRENT_TIME) ..."
 
-for i in `seq $SECONDS -1 0` ; do
+for i in `seq $SECS -1 0` ; do
 	sleep 1
 	HR_LEFT=$(( $i / 3600 ))
 	i=$(( $i % 3600 ))
