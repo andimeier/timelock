@@ -5,19 +5,19 @@
 # Damit wird der Zugriff auf die Datei temporaer unmoeglich gemacht.
 #
 # Usage:
-#   tempcrypt.sh FILE SECONDS TOKEN
+#   tempcrypt.sh FILE SECONDS LOCKFILE
 # Parameters:
 #   FILE ... File to be encrypted temporarily
 #   SECONDS ... number of seconds before automatically decrypting the file
-#   TOKEN ... token used for generating a lock file name, which will be created 
-#     when the file has been encrypted successfully. If such a token is provided,
-#     then program runs in "silent mode", no countdown shown.
+#   LOCKFILE ... lock file, which will be created when the file has been 
+#     encrypted successfully. If such a lock file is provided,
+#     then the program runs in "silent mode", no countdown shown.
 
 FILE=$1
 SECONDS=$2
 
 if [ "$3" ] ; then
-	LOCKFILE="/tmp/tempcrypt.$3.lock"
+	LOCKFILE=$3
 fi
 
 function printUsage {

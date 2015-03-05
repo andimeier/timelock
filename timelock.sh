@@ -73,9 +73,18 @@ REMOTE_FILE=`basename $FILE`
 echo "Copying file to remote server ..."
 scp $FILE $SCP_TARGET
 echo "File [$REMOTE_FILE] has been copied to $SCP_TARGET ..."
-ssh fritz@eck-zimmer.at "sh -c 'nohup /home/fritz/bin/tempcrypt $REMOTE_FILE $SECONDS $TOKEN >/tmp/tempcrypt.log &2>&1 &'"
+REMOTE_LOCKFILE="/tmp/tempcrypt.$TOKEN.lock"
+ssh fritz@eck-zimmer.at "sh -c 'nohup /home/fritz/bin/tempcrypt $REMOTE_FILE $SECONDS $REMOTE_LOCKFILE >/tmp/tempcrypt.log &2>&1 &'"
 
 echo "Remote encryption initiated."
+
+# loop until we know that the remote encryption has started
+echo "Checking if remote time lock has been started ..."
+while true; do
+	if ssh fritz@eck-zimmer.at "test -f $REMOTE_LOCKFILE"; then break; fi
+	sleep 1
+done
+echo "Remote lock file found, so remote encryption has been done. Proceeding ..."
 
 # encrypt locally
 echo "initiating local encryption ..."
