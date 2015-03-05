@@ -43,7 +43,7 @@ TIME=$2
 
 
 if [ "$FILE" == "" ] ; then
-	echo "File to encrypt not passed"
+	echo "Missing parameter #1: file to be encrypted"
 	exit 1
 fi
 if [ ! -e $FILE ] ; then

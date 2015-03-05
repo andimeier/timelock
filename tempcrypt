@@ -10,7 +10,8 @@
 #   FILE ... File to be encrypted temporarily
 #   SECONDS ... number of seconds before automatically decrypting the file
 #   TOKEN ... token used for generating a lock file name, which will be created 
-#     when the file has been encrypted successfully
+#     when the file has been encrypted successfully. If such a token is provided,
+#     then program runs in "silent mode", no countdown shown.
 
 FILE=$1
 SECONDS=$2
@@ -18,8 +19,6 @@ SECONDS=$2
 if [ "$3" ] ; then
 	LOCKFILE="/tmp/tempcrypt.$3.lock"
 fi
-
-echo "Parameter 2=$2"
 
 function printUsage {
 	cat <<EOT
@@ -57,7 +56,8 @@ function stdout {
 
 
 if [ "$FILE" == "" ] ; then
-	echo "File to encrypt not passed"
+	echo "Missing parameter #1: file to be encrypted"
+	printUsage
 	exit 1
 fi
 if [ ! -e $FILE ] ; then
@@ -68,6 +68,7 @@ fi
 
 if [ "$SECONDS" == "" ] ; then
 	echo "Missing parameter SECONDS"
+	printUsage
 	exit 1
 fi
 
@@ -80,7 +81,7 @@ fi
 PWD=`tr -dc "[:alnum:]" </dev/urandom | head -c 40`
 
 ccrypt --encrypt -K $PWD $FILE
-touch $LOCKFILE
+if [ "$LOCKFILE" ] ; then touch $LOCKFILE ; fi
 log "File $FILE has been encrypted."
 stdout "Starting countdown of $SECONDS seconds ..."
 
@@ -90,6 +91,11 @@ for i in `seq $SECONDS -1 0` ; do
 	i=$(( $i % 3600 ))
 	MIN_LEFT=$(( $i / 60 ))
 	SEC_LEFT=$(( $i % 60 ))
+	
+	# only print countdown if no lock file is specified. If a lock file is specified,
+	# it is assumed to run in "backup mode", providing only a second encryption thread
+	# in case the first should crash. This way the file can be recovered if the main
+	# thread crashed by waiting for the "backup thread" to finish.
 	if [ -z "$LOCKFILE" ] ; then
 		printf "%02d:%02d:%02d until decryption ...\r" $HR_LEFT $MIN_LEFT $SEC_LEFT
 	fi
@@ -99,7 +105,7 @@ ccrypt --decrypt -K $PWD $FILE
 echo "File $FILE has been decrypted."
 
 # delete lock file
-rm $LOCKFILE
+if [ "$LOCKFILE" ] ; then rm $LOCKFILE ; fi
 
 # show image
 #pqiv -f -t $FILE
