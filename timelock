@@ -4,7 +4,8 @@
 # das selbe Programm: das angegebene File wird verschluesselt und erst 
 # nach der angegebenen Zeit wieder entschlüsselt. Dazwischen ist der
 # Encryption-Key (zufaellig erzeugt) nur im Memory. Eine reelle Chance, das
-# wieder zureckzuerhalten, gibt es also praktisch nur nach dem Zeitablauf.
+# File wieder zureckzuerhalten, gibt es also praktisch nur nach dem 
+# Zeitablauf.
 #
 # Das Kopieren auf den remote-Server und das temporaere Verschluesseln dort
 # mit der selben Methode soll ein Backup sein. Fall lokal das Programm abstuerzt
