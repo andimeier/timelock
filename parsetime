@@ -1,0 +1,36 @@
+#!/usr/bin/perl
+#
+# parses the input string for time values and
+# returns the number of seconds
+#
+# Valid input strings:
+# 12h
+# 12h3m
+# 10s
+# 2h3s
+
+use strict;
+
+if (scalar @ARGV eq 0) {
+	print "ERROR: Mandatory argument TIME missing.\n";
+	exit 1;
+}
+
+my $str = $ARGV[0];
+
+my ($h, $m, $s) = (0, 0, 0);
+
+if ($str =~ /^([0-9]+)h(.*)$/i) {
+	($h, $str) = ($1, $2);
+}
+if ($str =~ /^([0-9]+)m(.*)$/i) {
+	($m, $str) = ($1, $2);
+} 
+if ($str =~ /^([0-9]+)s$/i) {
+	($s) = ($1);
+} 
+
+my $seconds = $h * 3600 + $m * 60 + $s;
+print "$seconds\n";
+
+exit 0;

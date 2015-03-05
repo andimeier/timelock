@@ -1,0 +1,107 @@
+#!/bin/bash
+#
+# verschluesselt die angegebene Datei mit einem temporaeren Kennwort und
+# entschluesselt sie wieder nach der angegebenen Zeit.
+# Damit wird der Zugriff auf die Datei temporaer unmoeglich gemacht.
+#
+# Usage:
+#   tempcrypt.sh FILE SECONDS TOKEN
+# Parameters:
+#   FILE ... File to be encrypted temporarily
+#   SECONDS ... number of seconds before automatically decrypting the file
+#   TOKEN ... token used for generating a lock file name, which will be created 
+#     when the file has been encrypted successfully
+
+FILE=$1
+SECONDS=$2
+
+if [ "$3" ] ; then
+	LOCKFILE="/tmp/tempcrypt.$3.lock"
+fi
+
+echo "Parameter 2=$2"
+
+function printUsage {
+	cat <<EOT
+Usage:
+  tempcrypt.sh FILE SECONDS
+Parameters:
+  FILE ... File to be encrypted temporarily
+  SECONDS ... number of seconds before automatically decrypting the file
+EOT
+	exit 0
+}
+
+
+# log to stdout or to log lockfile, depending on whether a lockfile 
+# should be written or not
+function log {
+	if [ "$LOCKFILE" ] ; then
+		echo $TEXT >>$LOCKFILE
+	else
+		echo $TEXT
+	fi
+}
+
+
+# log to stdout, but only if no lockfile should be written ,
+# otherwise do nothing
+function stdout {
+	if [ "$LOCKFILE" ] ; then
+		:
+	else
+		echo $TEXT
+	fi
+}
+
+
+
+if [ "$FILE" == "" ] ; then
+	echo "File to encrypt not passed"
+	exit 1
+fi
+if [ ! -e $FILE ] ; then
+	echo "File not found: $FILE"
+	exit 1
+fi
+
+
+if [ "$SECONDS" == "" ] ; then
+	echo "Missing parameter SECONDS"
+	exit 1
+fi
+
+if [ ! "$SECONDS" -ge "5" ] ; then
+	echo "Parameter SECONDS is $SECONDS, but must be 5 or greater"
+	exit 1
+fi
+
+# a random password
+PWD=`tr -dc "[:alnum:]" </dev/urandom | head -c 40`
+
+ccrypt --encrypt -K $PWD $FILE
+touch $LOCKFILE
+log "File $FILE has been encrypted."
+stdout "Starting countdown of $SECONDS seconds ..."
+
+for i in `seq $SECONDS -1 0` ; do
+	sleep 1
+	HR_LEFT=$(( $i / 3600 ))
+	i=$(( $i % 3600 ))
+	MIN_LEFT=$(( $i / 60 ))
+	SEC_LEFT=$(( $i % 60 ))
+	if [ -z "$LOCKFILE" ] ; then
+		printf "%02d:%02d:%02d until decryption ...\r" $HR_LEFT $MIN_LEFT $SEC_LEFT
+	fi
+done
+
+ccrypt --decrypt -K $PWD $FILE
+echo "File $FILE has been decrypted."
+
+# delete lock file
+rm $LOCKFILE
+
+# show image
+#pqiv -f -t $FILE
+
+#/cygdrive/c/Program\ Files\ \(x86\)/ACDSee32/ACDSee32.exe $FILE
