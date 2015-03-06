@@ -34,6 +34,26 @@ EOT
 	exit 0
 }
 
+function normal {
+	echo -e "\e[39m"
+}
+
+function red {
+	echo -e "\e[31m"
+}
+
+function green {
+	echo -e "\e[32m"
+}
+
+function blue {
+	echo -e "\e[34m"
+}
+
+function yellow {
+	echo -e "\e[33m"
+}
+
 if [ "$1" == "" ] ; then
 	printUsage
 fi
@@ -44,17 +64,23 @@ TIME=$2
 
 
 if [ "$FILE" == "" ] ; then
+	red
 	echo "Missing parameter #1: file to be encrypted"
+	normal
 	exit 1
 fi
 if [ ! -e $FILE ] ; then
+	red
 	echo "File not found: $FILE"
+	normal
 	exit 1
 fi
 
 
 if [ "$TIME" == "" ] ; then
+	red
 	echo "Missing parameter TIME"
+	normal
 	exit 1
 fi
 
@@ -65,7 +91,9 @@ TOKEN=`tr -dc "[:alnum:]" </dev/urandom | head -c 20`
 SECS=`parsetime $2`
 
 if [ "$SECS" -eq 0 ] ; then
+	red
 	echo "Unable to parse timespan"
+	normal
 	exit 1
 fi
 
@@ -87,11 +115,15 @@ while true; do
 	echo -n "."
 	sleep 1
 done
+green
 echo "Remote lock file found, so remote encryption has been done. Proceeding ..."
+normal
 
 # encrypt locally
 echo "initiating local encryption ..."
+yellow
 tempcrypt $FILE $SECS
+normal
 
 # after tempcrypt returns, display the file, assuming it is an image file
 # show image
