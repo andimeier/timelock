@@ -8,9 +8,9 @@
 # Zeitablauf.
 #
 # Das Kopieren auf den remote-Server und das temporaere Verschluesseln dort
-# mit der selben Methode soll ein Backup sein. Fall lokal das Programm abstuerzt
-# oder sonst irgendetwas passiert, wird wenigstens remote nach dem Zeitablauf 
-# ebenfalls das Originalfile wiederhergestellt.
+# passiert mit der selben Methode. Das soll ein Backup sein: falls lokal 
+# das Programm abstuerzt oder sonst irgendetwas passiert, wird wenigstens 
+# remote nach dem Zeitablauf ebenfalls das Originalfile wiederhergestellt.
 #
 # Usage:
 #   timelock FILE TIME
