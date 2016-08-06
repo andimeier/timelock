@@ -54,27 +54,39 @@ function yellow {
 	echo -e "\e[33m"
 }
 
+
 if [ "$1" == "" ] ; then
 	printUsage
 fi
 
 # parse command line parameters
-FILE=$1
+WIN_FILE=$1
 TIME=$2
 
 
-if [ "$FILE" == "" ] ; then
+if [ "$WIN_FILE" == "" ] ; then
 	red
 	echo "Missing parameter #1: file to be encrypted"
 	normal
 	exit 1
 fi
+
+FILE=`echo $WIN_FILE | sed 's@^\(.\):@/cygdrive/\1@' | sed 's@\\\\@/@g' `
+
+echo File is: $FILE
+
 if [ ! -e $FILE ] ; then
 	red
 	echo "File not found: $FILE"
+	echo "Be sure to use Windows File Path ('D:\Temp\test.jpg') and use single quotes."
 	normal
 	exit 1
 fi
+
+#/cygdrive/c/Program\ Files\ \(x86\)/ACDSee32/ACDSee32.exe $WIN_FILE
+
+# let Cygwin launch the default Windows application for this file
+cygstart $WIN_FILE
 
 
 if [ "$TIME" == "" ] ; then
@@ -129,4 +141,9 @@ normal
 # show image
 #pqiv -f -t $FILE
 
-/cygdrive/c/Program\ Files\ \(x86\)/ACDSee32/ACDSee32.exe $FILE
+
+
+#/cygdrive/c/Program\ Files\ \(x86\)/ACDSee32/ACDSee32.exe $WIN_FILE
+
+# let Cygwin launch the default Windows application for this file
+cygstart $WIN_FILE
