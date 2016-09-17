@@ -21,12 +21,15 @@
 
 SCP_TARGET=fritz@eck-zimmer.at:/home/fritz
 
+# set to 1 if you don't want a remote server to do a backup timelock
+NO_BACKUP=0
 
 function printUsage {
 	cat <<EOT
 Usage:
-  timelock FILE TIME 
+  timelock -n FILE TIME 
 Parameters:
+  -n ..... no backup (don't use remote server as a timelock)
   FILE ... File to be encrypted temporarily
   TIME ... amount of time before automatically decrypting the file
            format: 1h30m10s or 10s or 10m or ...
@@ -35,28 +38,33 @@ EOT
 }
 
 function normal {
-	echo -e "\e[39m"
+	echo -n -e "\e[39m"
 }
 
 function red {
-	echo -e "\e[31m"
+	echo -n -e "\e[31m"
 }
 
 function green {
-	echo -e "\e[32m"
+	echo -n -e "\e[32m"
 }
 
 function blue {
-	echo -e "\e[34m"
+	echo -n -e "\e[34m"
 }
 
 function yellow {
-	echo -e "\e[33m"
+	echo -n -e "\e[33m"
 }
 
 
 if [ "$1" == "" ] ; then
 	printUsage
+fi
+
+if [ "$1" == "-n" ] ; then
+	NO_BACKUP=1
+	shift
 fi
 
 # parse command line parameters
@@ -83,11 +91,7 @@ if [ ! -e $FILE ] ; then
 	exit 1
 fi
 
-#/cygdrive/c/Program\ Files\ \(x86\)/ACDSee32/ACDSee32.exe $WIN_FILE
-
-# let Cygwin launch the default Windows application for this file
-cygstart $WIN_FILE
-
+/cygdrive/c/Program\ Files\ \(x86\)/ACDSee32/ACDSee32.exe $WIN_FILE
 
 if [ "$TIME" == "" ] ; then
 	red
@@ -109,27 +113,40 @@ if [ "$SECS" -eq 0 ] ; then
 	exit 1
 fi
 
-# copy image file to server, as a backup ;)
-REMOTE_FILE=`basename $FILE`
-echo "Copying file to remote server ..."
-scp $FILE $SCP_TARGET
-echo "File [$REMOTE_FILE] has been copied to $SCP_TARGET ..."
-REMOTE_LOCKFILE="/tmp/tempcrypt.$TOKEN.lock"
-ssh fritz@eck-zimmer.at "sh -c 'nohup /home/fritz/bin/tempcrypt $REMOTE_FILE $SECS $REMOTE_LOCKFILE >>/tmp/tempcrypt.log 2>&1 &'"
+if [ "$NO_BACKUP" != "1" ] ; then
+	# copy image file to server, as a backup ;)
+	REMOTE_FILE=`basename $FILE`
+	echo "Copying file to remote server ..."
+	if scp $FILE $SCP_TARGET ; then
+		echo "File [$REMOTE_FILE] has been copied to $SCP_TARGET ..."
+	else
+		red
+		echo "Error at copying file to remote server"
+		normal
+		exit 1
+	fi
 	
+	REMOTE_LOCKFILE="/tmp/tempcrypt.$TOKEN.lock"
+	ssh fritz@eck-zimmer.at "sh -c 'nohup /home/fritz/bin/tempcrypt $REMOTE_FILE $SECS $REMOTE_LOCKFILE >>/tmp/tempcrypt.log 2>&1 &'"
 
-echo "Remote encryption initiated."
+	echo "Remote encryption initiated."
 
-# loop until we know that the remote encryption has started
-echo "Checking if remote time lock has been started ..."
-while true; do
-	if ssh fritz@eck-zimmer.at "test -f $REMOTE_LOCKFILE"; then break; fi
-	echo -n "."
-	sleep 1
-done
-green
-echo "Remote lock file found, so remote encryption has been done. Proceeding ..."
-normal
+	# loop until we know that the remote encryption has started
+	echo "Checking if remote time lock has been started ..."
+	while true; do
+		if ssh fritz@eck-zimmer.at "test -f $REMOTE_LOCKFILE"; then break; fi
+		echo -n "."
+		sleep 1
+	done
+	green
+	echo "Remote lock file found, so remote encryption has been done. Proceeding ..."
+	normal
+else
+	red
+	echo "SKIPPING REMOTE ENCRYPTION (NO BACKUP)!"
+	normal
+ 	read -p "<press ENTER>" DUMMY
+fi	
 
 # encrypt locally
 echo "initiating local encryption ..."
@@ -143,7 +160,4 @@ normal
 
 
 
-#/cygdrive/c/Program\ Files\ \(x86\)/ACDSee32/ACDSee32.exe $WIN_FILE
-
-# let Cygwin launch the default Windows application for this file
-cygstart $WIN_FILE
+/cygdrive/c/Program\ Files\ \(x86\)/ACDSee32/ACDSee32.exe $WIN_FILE
